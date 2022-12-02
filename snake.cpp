@@ -1,19 +1,10 @@
-﻿// Deneme.cpp : Bu dosya 'main' işlevi içeriyor. Program yürütme orada başlayıp biter.
-//
-
 #include <iostream>
 #include <windows.h>
 #include <conio.h>
 #include <ctime>
 #include <cmath>
 
-#define KEY_UP 72
 
-#define KEY_DOWN 80
-
-#define KEY_LEFT 75
-
-#define KEY_RIGHT 77
 
 using namespace std;
 
@@ -61,25 +52,28 @@ struct SnakeHead
 SnakeHead snakeHead;
 
 
-
-void InitializeSnakeHead()
+void ResetScreen()
 {
-	box[snakeHead.posX][snakeHead.posY] = snakeHead.layer;
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			box[j][i] = blank;
+		}
+	}
 
-	
+
+}
+
+void InitializeSnakeHead(bool* appleChecker)
+{
 
 	int tempDirX = snakeHead.dirX;
 	int tempDirY = snakeHead.dirY;
-
 	if (snakeHead.posX + snakeHead.dirX == 0)
 		tempDirX = width - 3;
 	else if (snakeHead.posX + snakeHead.dirX == width - 1)
 		tempDirX = -(width - 3);
-
-
-	if (box[snakeHead.posX + snakeHead.dirX][snakeHead.posY] > 20 || box[snakeHead.posX][snakeHead.posY + snakeHead.dirY] > 20)
-		gameOver = true;
-
 
 
 	if (snakeHead.posY + snakeHead.dirY == 0)
@@ -87,9 +81,26 @@ void InitializeSnakeHead()
 	else if (snakeHead.posY + snakeHead.dirY == height - 1)
 		tempDirY = -(height - 3);
 
-
 	snakeHead.posX += tempDirX;
 	snakeHead.posY += tempDirY;
+
+	if (!(snakeHead.dirX == 0 && snakeHead.dirY == 0))
+	{
+		if (box[snakeHead.posX][snakeHead.posY] > 20)
+			gameOver = true;
+	}
+
+	if (box[snakeHead.posX][snakeHead.posY] == apple)
+	{
+		*appleChecker = false;
+		appleCounter++;
+	}
+
+	box[snakeHead.posX][snakeHead.posY] = snakeHead.layer;
+
+
+
+
 
 }
 
@@ -175,9 +186,18 @@ void PlusTool()
 	{
 		for (int j = 0; j < width; j++)
 		{
-			if (box[j][i] > 15)
+			if (box[j][i] > 19)
 				box[j][i] += 1;
+		}
+	}
+}
 
+void OutOfSnakeLengthCheck()
+{
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
 			if (box[j][i] == snakeHead.layer + appleCounter + 4)
 				box[j][i] = blank;
 
@@ -186,40 +206,25 @@ void PlusTool()
 }
 
 
-bool CheckApple()
-{
-	bool appleExists = false;
-
-	for (int i = 0; i < height; i++)
-	{
-		for (int j = 0; j < width; j++)
-		{
-			if (box[j][i] == apple)
-				appleExists = true;
-		}
-	}
-
-	return appleExists;
-}
 
 int k = 0;
 
 void Update()
 {
+	bool appleExists = true;
 
 	GetInput();
 
-	InitializeBorder();
-
 	PlusTool();
 
+	InitializeSnakeHead(&appleExists);
 
-	InitializeSnakeHead();
+	OutOfSnakeLengthCheck();
 
-	if (!CheckApple())
+
+	if (!appleExists)
 	{
 		SpawnApple();
-		appleCounter++;
 	}
 
 
@@ -255,9 +260,6 @@ void Draw()
 			case 20:
 				paint[j][i] = snakeHead.sprite;
 				break;
-			case 6:
-				paint[j][i] = snakeHead.sprite;
-				break;
 			case 9:
 				paint[j][i] = s_apple;
 				break;
@@ -266,10 +268,8 @@ void Draw()
 			}
 
 		}
-
 	}
 
-	//print to screen part
 	string output = "";
 
 	cout << " score: " << appleCounter << endl;
@@ -283,81 +283,108 @@ void Draw()
 			output += " ";
 		}
 		output += '\n';
+
+
+
 	}
 
 	cout << output << endl;
+
+
 }
 
 
 int main()
 {
-	system("cls");
-
 	srand(time(0));
 
-	SetScreenClean();
-
-	SpawnApple();
-
-
-
 	while (1)
 	{
-		Update();
 
-		Draw();
+		appleCounter = 0;
+		gameOver = false;
+		gameWon = false;
 
-		Sleep(1000 / speed);
+		system("cls");
 
-		ClearScreen();
+		ResetScreen();
 
-		if (gameOver)
-			break;
+		InitializeBorder();
 
-	}
+		SetScreenClean();
 
-	if (appleCounter == ((width - 2) * (height - 2)) - 4)
-		gameWon = true;
+		SpawnApple();
 
 
-	system("cls");
-	if (!gameWon)
-	{
-		cout << " your score is: " << appleCounter << endl;
-	}
-	else
-	{
-		cout << "congratulations! you've beaten the game!" << endl;
-	}
-	cout << " press 'q' to quit " << endl;
 
-	while (1)
-	{
-		if (_kbhit())
+		snakeHead.posX = round(width / 2);
+		snakeHead.posY = round(height / 2);
+		snakeHead.dirX = 0;
+		snakeHead.dirY = 0;
+
+
+
+		while (1)
 		{
-			if ((_getch() == 'q') || (_getch() == 'Q'))
+			Update();
+
+			Draw();
+
+			if (gameOver)
 				break;
+
+			Sleep(1000 / speed);
+
+			ClearScreen();
+
+		}
+
+		if (appleCounter == ((width - 2) * (height - 2)) - 4)
+			gameWon = true;
+
+		system("cls");
+
+		if (!gameWon)
+		{
+			cout << " your score is: " << appleCounter << endl;
+		}
+		else
+		{
+			cout << "congratulations! you've beaten the game!" << endl;
+		}
+
+		cout << " press 'r' to retry, 'q' to quit " << endl;
+
+		bool goRestart = false;
+
+		while (1)
+		{
+			if (_kbhit())
+			{
+				char key = _getch();
+
+				if ((key == 'q') || (key == 'Q'))
+					break;
+				else if ((key == 'r') || (key == 'R'))
+				{
+					goRestart = true;
+					break;
+				}
+
+				Sleep(1000 / speed);
+			}
+
+		}
+
+		if (!goRestart)
+		{
+			break;
 		}
 
 	}
-
-
 
 
 	return 0;
 }
 
 
-
-
-
-// Programı çalıştır: Ctrl + F5 veya Hata Ayıkla > Hata Ayıklamadan Başlat menüsü
-// Programda hata ayıkla: F5 veya Hata Ayıkla > Hata Ayıklamayı Başlat menüsü
-
-// Kullanmaya Başlama İpuçları: 
-//   1. Dosyaları eklemek/yönetmek için Çözüm Gezgini penceresini kullanın
-//   2. Kaynak denetimine bağlanmak için Takım Gezgini penceresini kullanın
-//   3. Derleme çıktısını ve diğer iletileri görmek için Çıktı penceresini kullanın
-//   4. Hataları görüntülemek için Hata Listesi penceresini kullanın
-//   5. Yeni kod dosyaları oluşturmak için Projeye Git > Yeni Öğe ekle veya varolan kod dosyalarını projeye eklemek için Proje > Var Olan Öğeyi Ekle adımlarını izleyin
-//   6. Bu projeyi daha sonra yeniden açmak için Dosya > Aç > Proje'ye gidip .sln uzantılı dosyayı seçin
