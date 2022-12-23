@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <windows.h>
 #include <conio.h>
 #include <ctime>
@@ -11,10 +11,10 @@ using namespace std;
 const int width = 20;
 const int height = 20;
 
-const int speed = 20;
+const int speed = 14;
 
 int box[width][height];
-int paint[width][height];
+int paint[2 * width][2 * height];
 
 const int blank = 0;
 const char s_blank = ' ';
@@ -24,6 +24,8 @@ const char s_border = '+';
 
 const int apple = 9;
 const char s_apple = 'o';
+
+int resolutionMultiplier = 1;
 
 
 int appleCounter = 0;
@@ -51,6 +53,11 @@ struct SnakeHead
 
 SnakeHead snakeHead;
 
+void gotoxy(int x, int y) {
+	cursorPosition.X = x;
+	cursorPosition.Y = y;
+	SetConsoleCursorPosition(console, cursorPosition);
+}
 
 void ResetScreen()
 {
@@ -84,7 +91,7 @@ void InitializeSnakeHead(bool* appleChecker)
 	snakeHead.posX += tempDirX;
 	snakeHead.posY += tempDirY;
 
-	if (!(snakeHead.dirX == 0 && snakeHead.dirY == 0))
+	if (!(snakeHead.dirX == 0 && snakeHead.dirY == 0) || (appleCounter == ((width - 2) * (height - 2)) - 5))
 	{
 		if (box[snakeHead.posX][snakeHead.posY] > 20)
 			gameOver = true;
@@ -151,7 +158,48 @@ void GetInput()
 			snakeHead.dirX = -1;
 			snakeHead.dirY = 0;
 		}
+		else if (key == 'm')
+		{
+			if (resolutionMultiplier == 1)
+			{
+				resolutionMultiplier = 2;
+				system("MODE 84,43");
+			}
+			else
+			{
+				system("cls");
+				resolutionMultiplier = 1;
+				system("MODE 40, 23");
 
+			}
+		}
+		else if (key == 'p')
+		{
+			key = 0;
+
+			if (resolutionMultiplier == 1)
+				gotoxy(width / 2 + 4, height / 2 + 1);
+			else
+				gotoxy(width + 14, height + 1);
+
+
+			cout <<"-- PAUSED --";
+
+			while (true)
+			{
+				key = _getch();
+
+				if (key == 'p')
+				{
+					system("cls");
+					break;
+				}
+				else if (key == 'm')
+				{
+					
+				}
+			}
+		}
 
 
 	}
@@ -245,26 +293,36 @@ void SetScreenClean()
 void Draw()
 {
 
-	for (int i = 0; i < height; i++)
+	for (int i = 0; i < height* resolutionMultiplier; i+= resolutionMultiplier)
 	{
-		for (int j = 0; j < width; j++)
+		for (int j = 0; j < width* resolutionMultiplier; j+= resolutionMultiplier)
 		{
-			switch (box[j][i])
+			char pic;
+
+			switch (box[j/ resolutionMultiplier][i/ resolutionMultiplier])
 			{
 			case 0:
-				paint[j][i] = s_blank;
+				pic = s_blank;
 				break;
 			case 1:
-				paint[j][i] = s_border;
+				pic = s_border;
 				break;
 			case 20:
-				paint[j][i] = snakeHead.sprite;
+				pic = snakeHead.sprite;
 				break;
 			case 9:
-				paint[j][i] = s_apple;
+				pic = s_apple;
 				break;
 			default:
-				paint[j][i] = snakeHead.sprite;
+				pic = snakeHead.sprite;
+			}
+
+			paint[j][i] = pic;
+			if (resolutionMultiplier == 2)
+			{
+				paint[j + 1][i] = pic;
+				paint[j][i + 1] = pic;
+				paint[j + 1][i + 1] = pic;
 			}
 
 		}
@@ -272,12 +330,15 @@ void Draw()
 
 	string output = "";
 
-	cout << " score: " << appleCounter << endl;
+	if (resolutionMultiplier == 2)
+	cout << "                    ";
+
+	cout << "      --------- score: " << appleCounter << " --------" << endl;
 
 
-	for (int i = 0; i < height; i++)
+	for (int i = 0; i < height * resolutionMultiplier; i++)
 	{
-		for (int j = 0; j < width; j++)
+		for (int j = 0; j < width * resolutionMultiplier; j++)
 		{
 			output += paint[j][i];
 			output += " ";
@@ -289,14 +350,52 @@ void Draw()
 	}
 
 	cout << output << endl;
-
-
 }
 
 
 int main()
 {
+
+	system("MODE 70,30");
 	srand(time(0));
+
+	        cout << "\n" << endl;
+	        cout << "            the   \n" << endl;
+ 
+	/*1*/	cout << "         ####     ##     ##      ##        ##     ##     ######     " << endl;
+	/*2*/	cout << "        ######    ###    ##     ####       ##    ##.   ####....#    " << endl;
+	/*3*/	cout << "       ###...#   ####   ##.     ####       ##   ##..  ##........    " << endl;
+	/*4*/	cout << "       ##.....   ##.#   ##.    ##..##     ##.  ##..   ##...    .    " << endl;
+	/*5*/	cout << "       ##.   .   ##.#   ##     #...##     ##. ##..    ###           " << endl;
+	/*6*/	cout << "       .##       #. ##  #.    ##.  ##     #####..     .######       " << endl;
+	/*7*/	cout << "       ..##     ##. ## ##.    #######    ######.      .###...       " << endl;
+	/*8*/	cout << "        ..#     ##  .# ##    ##....##    ##..##      ###.....       " << endl;
+	/*9*/	cout << "         .##    ##  .# ##    ##....##    ##...##     ##...          " << endl;
+	/*10*/	cout << "    ##   ###    #.   ###.   ##.    ##   ##.   ##    ###.            " << endl;
+	/*11*/	cout << "    .######.   ##.   .##.   ##.    ##   ##.   .##   #####    #      " << endl;
+	/*12*/	cout << "    ..####..   ##    .##   ##      ##   ##    .##   ..#######.      " << endl;
+	/*13*/	cout << "     ......    ..     ..   ..      ..   ..     ..   ..........      " << endl;
+	/*14*/	cout << "      ....     ..     ..   ..      ..   ..     ..     ......        " << endl;
+	        cout << "    \n                                    -- by ege --              " << endl;
+			cout << "    \n\n                  press 'spacebar' to start                 " << endl;
+
+	while (1)
+	{
+
+		if (_kbhit())
+		{
+			char x = _getch();
+
+			if(x == 32)
+			break;
+		}
+
+
+
+	}
+
+
+	system("MODE 40, 23");
 
 	while (1)
 	{
@@ -323,7 +422,6 @@ int main()
 		snakeHead.dirY = 0;
 
 
-
 		while (1)
 		{
 			Update();
@@ -339,7 +437,7 @@ int main()
 
 		}
 
-		if (appleCounter == ((width - 2) * (height - 2)) - 4)
+		if (appleCounter == ((width - 2) * (height - 2)) - 5)
 			gameWon = true;
 
 		system("cls");
