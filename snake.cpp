@@ -1,8 +1,10 @@
-﻿#include <iostream>
+#include <iostream>
 #include <windows.h>
 #include <conio.h>
 #include <ctime>
 #include <cmath>
+#include <fstream>
+#include <string>
 
 
 
@@ -355,8 +357,7 @@ void Draw()
 
 int main()
 {
-
-	system("MODE 70,30");
+	system("MODE 140,30");
 	srand(time(0));
 
 	        cout << "\n" << endl;
@@ -442,16 +443,62 @@ int main()
 
 		system("cls");
 
-		if (!gameWon)
+		fstream myFile;
+
+		myFile.open("data.txt", ios::in);
+
+		int lastScore = 0;
+
+		if (myFile.is_open())
 		{
-			cout << " your score is: " << appleCounter << endl;
+			string line;
+
+			getline(myFile, line);
+
+			try
+			{
+				lastScore = stoi(line);
+			}
+			catch (exception e)
+			{
+				lastScore = 0;
+			}
+			
+			myFile.close();
+		}
+
+		if (appleCounter > lastScore)
+		{
+			myFile.open("data.txt", ios::out);
+
+			if (myFile.is_open())
+			{
+				myFile << appleCounter;
+				myFile.close();
+			}
+
+			cout << "NEW HIGH SCORE!!" << endl;
 		}
 		else
 		{
-			cout << "congratulations! you've beaten the game!" << endl;
+			cout << "Best Score: " << lastScore << endl;
 		}
 
-		cout << " press 'r' to retry, 'q' to quit " << endl;
+
+
+
+		if (!gameWon)
+		{
+			cout << "Your Score is: " << appleCounter << endl;
+		}
+		else
+		{
+			cout << "Congratulations! You've Beaten the Game!" << endl;
+		}
+
+
+
+		cout << "\n Press 'r' to Retry, 'q' to Quit " << endl;
 
 		bool goRestart = false;
 
